@@ -1,27 +1,17 @@
-# Netlify Configuration
+# Netlify Configuration (inner — ใช้ร่วมกับ root netlify.toml)
+# Functions v2 ใช้ config.path จัดการ route โดยตรง ไม่ต้องใช้ redirects
 
 [build]
   command = "echo 'Building...'"
   functions = "netlify/functions"
   publish = "."
 
-# API routing configuration
-[[redirects]]
-  from = "/api/ultralyticsPredict"
-  to = "/.netlify/functions/ultralyticsPredict"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/geminiChat"
-  to = "/.netlify/functions/geminiChat"
-  status = 200
-  force = true
-
-# CORS headers for API responses
+# Custom Headers
 [[headers]]
-  for = "/api/*"
+  for = "/*"
   [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+
+[functions]
+  node_bundler = "esbuild"

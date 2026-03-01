@@ -1,694 +1,1115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Medical Dashboard | Thachaya Ditjaroen</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Prompt', 'sans-serif'] },
-                    colors: {
-                        primary: '#1c5f58',
-                        secondary: '#287e75',
-                        accent: '#48a89e',
-                        dark: '#0f172a',
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Prompt", "sans-serif"] },
+            colors: {
+              primary: "#1c5f58",
+              secondary: "#287e75",
+              accent: "#48a89e",
+              dark: "#0f172a",
+            },
+          },
+        },
+      };
     </script>
     <style>
-        :root { --primary: #1c5f58; --secondary: #287e75; --bg-gradient: linear-gradient(135deg, #f0f9f9 0%, #ffffff 100%); }
-        body { transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
-        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: var(--bg-gradient); }
-        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); }
-        .dark .glass-card { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); color: white; }
-        .tab-btn.active { background-color: var(--primary); color: white; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(28, 95, 88, 0.3); }
-        .chat-scroll::-webkit-scrollbar { width: 4px; }
-        .chat-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .typing-dot { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: blink 1.4s infinite both; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        .upload-preview-container { position: relative; max-width: 100%; margin: 1rem auto; display: inline-block; }
-        .upload-preview { max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 1rem; }
-        .detection-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border-radius: 1rem; }
-        
-        .dev-fab { position: fixed; bottom: 2rem; right: 2rem; width: 3.5rem; height: 3.5rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; z-index: 40; transition: all 0.3s; }
-        .dev-fab:hover { transform: scale(1.1) rotate(5deg); }
+      :root {
+        --primary: #1c5f58;
+        --secondary: #287e75;
+        --bg-gradient: linear-gradient(135deg, #f0f9f9 0%, #ffffff 100%);
+      }
+      body {
+        transition:
+          background-color 0.3s,
+          color 0.3s;
+        overflow-x: hidden;
+      }
+      #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: var(--bg-gradient);
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+      }
+      .dark .glass-card {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+      .tab-btn.active {
+        background-color: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(28, 95, 88, 0.3);
+      }
+      .chat-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .chat-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      .typing-dot {
+        width: 6px;
+        height: 6px;
+        background: #94a3b8;
+        border-radius: 50%;
+        animation: blink 1.4s infinite both;
+      }
+      .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      .upload-preview-container {
+        position: relative;
+        max-width: 100%;
+        margin: 1rem auto;
+        display: inline-block;
+      }
+      .upload-preview {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 1rem;
+      }
+      .detection-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        border-radius: 1rem;
+      }
 
-        select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+      .dev-fab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 40;
+        transition: all 0.3s;
+      }
+      .dev-fab:hover {
+        transform: scale(1.1) rotate(5deg);
+      }
+
+      select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1em;
+      }
     </style>
-</head>
-<body class="antialiased min-h-screen" data-lang="th">
-
+  </head>
+  <body class="antialiased min-h-screen" data-lang="th">
     <div id="canvas-container"></div>
 
     <!-- Nav -->
     <nav class="fixed top-0 w-full z-50 px-4 py-4">
-        <div class="max-w-7xl mx-auto flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg rounded-2xl px-6 py-3 border border-white/40 shadow-xl">
-            <div class="flex items-center gap-2 text-xl font-bold text-primary">
-                <i class="fa-solid fa-house-chimney-medical text-2xl"></i>
-                <span class="tracking-tight">MediAI</span>
-            </div>
-            <div class="flex items-center gap-2 sm:gap-4">
-                <button onclick="toggleLanguage()" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold transition hover:bg-gray-200" id="lang-btn">
-                    <i class="fa-solid fa-globe"></i>
-                    <span>EN</span>
-                </button>
-                <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-slate-800 transition hover:bg-gray-200" id="theme-icon">
-                    <i class="fa-solid fa-moon"></i>
-                </button>
-                <button onclick="openBooking()" data-i18n="nav_book" class="hidden sm:block bg-primary text-white px-5 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg active:scale-95">
-                    นัดหมายแพทย์
-                </button>
-            </div>
+      <div
+        class="max-w-7xl mx-auto flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg rounded-2xl px-6 py-3 border border-white/40 shadow-xl"
+      >
+        <div class="flex items-center gap-2 text-xl font-bold text-primary">
+          <i class="fa-solid fa-house-chimney-medical text-2xl"></i>
+          <span class="tracking-tight">MediAI</span>
         </div>
+        <div class="flex items-center gap-2 sm:gap-4">
+          <button
+            onclick="toggleLanguage()"
+            class="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold transition hover:bg-gray-200"
+            id="lang-btn"
+          >
+            <i class="fa-solid fa-globe"></i>
+            <span>EN</span>
+          </button>
+          <button
+            onclick="toggleTheme()"
+            class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-slate-800 transition hover:bg-gray-200"
+            id="theme-icon"
+          >
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <button
+            onclick="openBooking()"
+            data-i18n="nav_book"
+            class="hidden sm:block bg-primary text-white px-5 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-lg active:scale-95"
+          >
+            นัดหมายแพทย์
+          </button>
+        </div>
+      </div>
     </nav>
 
     <!-- Floating Dev Button -->
-    <button onclick="switchTab('dev')" class="dev-fab bg-white/80 dark:bg-slate-800/80 border border-white/40 dark:border-slate-700 shadow-xl backdrop-blur-md group" title="Developer Info">
-        <i class="fa-solid fa-user-gear text-primary text-xl group-hover:text-accent transition"></i>
+    <button
+      onclick="switchTab('dev')"
+      class="dev-fab bg-white/80 dark:bg-slate-800/80 border border-white/40 dark:border-slate-700 shadow-xl backdrop-blur-md group"
+      title="Developer Info"
+    >
+      <i
+        class="fa-solid fa-user-gear text-primary text-xl group-hover:text-accent transition"
+      ></i>
     </button>
 
     <main class="pt-24 pb-20 px-4 max-w-6xl mx-auto">
-        <!-- Tabs -->
-        <div class="flex justify-center mb-8 gap-2 flex-wrap">
-            <button onclick="switchTab('xray')" id="tab-btn-xray" class="tab-btn active px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-dna"></i> <span data-i18n="tab_skin">มะเร็งผิวหนัง</span>
+      <!-- Tabs -->
+      <div class="flex justify-center mb-8 gap-2 flex-wrap">
+        <button
+          onclick="switchTab('xray')"
+          id="tab-btn-xray"
+          class="tab-btn active px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all"
+        >
+          <i class="fa-solid fa-dna"></i>
+          <span data-i18n="tab_skin">มะเร็งผิวหนัง</span>
+        </button>
+        <button
+          onclick="switchTab('blood')"
+          id="tab-btn-blood"
+          class="tab-btn px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all"
+        >
+          <i class="fa-solid fa-microscope"></i>
+          <span data-i18n="tab_blood">ตรวจเม็ดเลือด</span>
+        </button>
+        <button
+          onclick="switchTab('chest')"
+          id="tab-btn-chest"
+          class="tab-btn px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all"
+        >
+          <i class="fa-solid fa-lungs"></i>
+          <span data-i18n="tab_chest">เอกซเรย์ปอด</span>
+        </button>
+        <button
+          onclick="switchTab('chat')"
+          id="tab-btn-chat"
+          class="tab-btn px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all"
+        >
+          <i class="fa-solid fa-comment-medical"></i>
+          <span data-i18n="tab_chat">ปรึกษา AI</span>
+        </button>
+      </div>
+
+      <div
+        class="glass-card rounded-[2.5rem] p-6 md:p-10 shadow-2xl min-h-[580px] border border-white/60"
+      >
+        <!-- VIEW: SKIN -->
+        <div id="view-xray" class="animate-fade-in block text-center">
+          <h2
+            class="text-3xl font-black text-primary mb-2"
+            data-i18n="skin_title"
+          >
+            Skin Cancer Analysis
+          </h2>
+          <p class="text-gray-500 mb-8" data-i18n="skin_sub">
+            วิเคราะห์ความเสี่ยงมะเร็งผิวหนังจากภาพถ่าย
+          </p>
+          <div
+            class="max-w-xl mx-auto border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-3xl p-10 bg-white/30 hover:border-primary transition cursor-pointer group"
+            onclick="document.getElementById('input-xray').click()"
+          >
+            <input
+              type="file"
+              id="input-xray"
+              class="hidden"
+              accept="image/*"
+              onchange="handleSkinUpload(event)"
+            />
+            <div id="status-xray">
+              <i
+                class="fa-solid fa-cloud-arrow-up text-5xl text-gray-300 mb-4 group-hover:text-primary transition"
+              ></i>
+              <p class="font-bold text-gray-400" data-i18n="upload_text">
+                อัปโหลดภาพที่นี่
+              </p>
+            </div>
+            <div class="upload-preview-container w-full relative">
+              <canvas
+                id="canvas-xray"
+                class="max-w-full h-auto rounded-xl shadow-2xl hidden mx-auto"
+              ></canvas>
+            </div>
+          </div>
+          <div id="controls-xray" class="mt-6 hidden">
+            <button
+              onclick="runSkinAnalysis()"
+              data-i18n="btn_analyze"
+              class="bg-primary text-white px-12 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95"
+            >
+              เริ่มวิเคราะห์
             </button>
-            <button onclick="switchTab('blood')" id="tab-btn-blood" class="tab-btn px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-microscope"></i> <span data-i18n="tab_blood">ตรวจเม็ดเลือด</span>
-            </button>
-            <button onclick="switchTab('chest')" id="tab-btn-chest" class="tab-btn px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-lungs"></i> <span data-i18n="tab_chest">เอกซเรย์ปอด</span>
-            </button>
-            <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn px-6 py-3 rounded-xl glass-card font-semibold flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-comment-medical"></i> <span data-i18n="tab_chat">ปรึกษา AI</span>
-            </button>
+          </div>
+          <div
+            id="result-xray"
+            class="mt-8 hidden p-6 bg-white dark:bg-slate-800 rounded-2xl border-2 border-primary/20 max-w-xl mx-auto shadow-inner"
+          >
+            <!-- Dynamic detection results -->
+          </div>
         </div>
 
-        <div class="glass-card rounded-[2.5rem] p-6 md:p-10 shadow-2xl min-h-[580px] border border-white/60">
-             <!-- VIEW: SKIN -->
-             <div id="view-xray" class="animate-fade-in block text-center">
-                <h2 class="text-3xl font-black text-primary mb-2" data-i18n="skin_title">Skin Cancer Analysis</h2>
-                <p class="text-gray-500 mb-8" data-i18n="skin_sub">วิเคราะห์ความเสี่ยงมะเร็งผิวหนังจากภาพถ่าย</p>
-                <div class="max-w-xl mx-auto border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-3xl p-10 bg-white/30 hover:border-primary transition cursor-pointer group" onclick="document.getElementById('input-xray').click()">
-                    <input type="file" id="input-xray" class="hidden" accept="image/*" onchange="handleFileUpload(event, 'preview-xray')">
-                    <div id="status-xray"><i class="fa-solid fa-cloud-arrow-up text-5xl text-gray-300 mb-4 group-hover:text-primary transition"></i><p class="font-bold text-gray-400" data-i18n="upload_text">อัปโหลดภาพที่นี่</p></div>
-                    <div class="upload-preview-container">
-                        <img id="preview-xray" class="upload-preview hidden shadow-2xl">
-                        <canvas id="canvas-xray" class="detection-canvas"></canvas>
-                    </div>
-                </div>
-                <div id="controls-xray" class="mt-6 hidden">
-                    <button onclick="runAnalysis('xray')" data-i18n="btn_analyze" class="bg-primary text-white px-12 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95">เริ่มวิเคราะห์</button>
-                </div>
-                <div id="result-xray" class="mt-8 hidden p-6 bg-white dark:bg-slate-800 rounded-2xl border-2 border-primary/20 max-w-xl mx-auto">
-                    <h4 class="font-bold text-primary mb-2" data-i18n="res_header">ผลการวิเคราะห์</h4>
-                    <div class="text-3xl font-black mb-1" id="res-val-xray">---</div>
-                    <div class="text-sm text-gray-500" id="res-prob-xray">Confidence: --%</div>
-                </div>
+        <!-- VIEW: BLOOD -->
+        <div id="view-blood" class="hidden animate-fade-in text-center">
+          <h2
+            class="text-3xl font-black text-secondary mb-2"
+            data-i18n="blood_title"
+          >
+            Blood Cell Identification
+          </h2>
+          <div
+            class="max-w-xl mx-auto border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-3xl p-10 bg-white/30 hover:border-secondary transition cursor-pointer group"
+            onclick="document.getElementById('input-blood').click()"
+          >
+            <input
+              type="file"
+              id="input-blood"
+              class="hidden"
+              accept="image/*"
+              onchange="handleBloodUpload(event)"
+            />
+            <div id="status-blood">
+              <i
+                class="fa-solid fa-microscope text-5xl text-gray-300 mb-4 group-hover:text-secondary transition"
+              ></i>
+              <p class="font-bold text-gray-400" data-i18n="upload_blood">
+                อัปโหลดภาพสไลด์เม็ดเลือด
+              </p>
             </div>
-
-            <!-- VIEW: BLOOD -->
-            <div id="view-blood" class="hidden animate-fade-in text-center">
-                <h2 class="text-3xl font-black text-secondary mb-2" data-i18n="blood_title">Blood Cell Identification</h2>
-                <div class="max-w-xl mx-auto border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-3xl p-10 bg-white/30 hover:border-secondary transition cursor-pointer group" onclick="document.getElementById('input-blood').click()">
-                    <input type="file" id="input-blood" class="hidden" accept="image/*" onchange="handleFileUpload(event, 'preview-blood')">
-                    <div id="status-blood"><i class="fa-solid fa-microscope text-5xl text-gray-300 mb-4 group-hover:text-secondary transition"></i><p class="font-bold text-gray-400" data-i18n="upload_blood">อัปโหลดภาพสไลด์เม็ดเลือด</p></div>
-                    <div class="upload-preview-container">
-                        <img id="preview-blood" class="upload-preview hidden shadow-2xl">
-                        <canvas id="canvas-blood" class="detection-canvas"></canvas>
-                    </div>
-                </div>
-                <div id="controls-blood" class="mt-6 hidden">
-                    <button onclick="runAnalysis('blood')" data-i18n="btn_count" class="bg-secondary text-white px-12 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95">ตรวจนับเซลล์</button>
-                </div>
-                <div id="result-blood" class="mt-8 hidden p-6 bg-white dark:bg-slate-800 rounded-2xl max-w-xl mx-auto text-left space-y-3 shadow-inner">
-                    <h4 class="font-bold text-secondary text-center" data-i18n="res_blood_header">สรุปการตรวจพบ</h4>
-                    <div id="blood-progress-container" class="space-y-4"></div>
-                    <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-900 rounded-xl text-center"><p class="text-xl font-black text-secondary" id="res-val-blood">---</p></div>
-                </div>
+            <div class="upload-preview-container w-full relative">
+              <canvas
+                id="canvas-blood"
+                class="max-w-full h-auto rounded-xl shadow-2xl hidden mx-auto"
+              ></canvas>
             </div>
-
-            <!-- VIEW: CHEST -->
-            <div id="view-chest" class="hidden animate-fade-in text-center">
-                <h2 class="text-3xl font-black text-cyan-600 mb-2" data-i18n="chest_title">Chest X-Ray Analysis</h2>
-                <p class="text-gray-500 mb-8" data-i18n="chest_sub">วิเคราะห์ภาพรังสีทรวงอกด้วย AI</p>
-                <div class="max-w-xl mx-auto border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-3xl p-10 bg-white/30 hover:border-cyan-500 transition cursor-pointer group" onclick="document.getElementById('input-chest').click()">
-                    <input type="file" id="input-chest" class="hidden" accept="image/*" onchange="handleChestUpload(event)">
-                    <div id="status-chest"><i class="fa-solid fa-lungs-virus text-5xl text-gray-300 mb-4 group-hover:text-cyan-500 transition"></i><p class="font-bold text-gray-400" data-i18n="upload_chest">อัปโหลดภาพ X-Ray</p></div>
-                    <div class="upload-preview-container w-full relative">
-                        <canvas id="canvas-chest" class="max-w-full h-auto rounded-xl shadow-2xl hidden mx-auto"></canvas>
-                    </div>
-                </div>
-                <div id="controls-chest" class="mt-6 hidden">
-                    <button onclick="runChestAnalysis()" data-i18n="btn_analyze" class="bg-cyan-600 text-white px-12 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95">เริ่มวิเคราะห์</button>
-                </div>
-                <div id="result-chest" class="mt-8 hidden p-6 bg-white dark:bg-slate-800 rounded-2xl border-2 border-cyan-600/20 max-w-xl mx-auto shadow-inner">
-                    <!-- Dynamic summary results -->
-                </div>
-            </div>
-
-            <!-- VIEW: CHAT -->
-            <div id="view-chat" class="hidden animate-fade-in flex flex-col h-[520px]">
-                <div id="chat-box" class="flex-grow overflow-y-auto chat-scroll p-4 space-y-4 bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl mb-4 border border-gray-100 dark:border-slate-800 shadow-inner"></div>
-                <div id="typing-indicator" class="hidden flex gap-2 ml-14 mb-4">
-                    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-                </div>
-                <div class="flex gap-2 p-1">
-                    <input type="text" id="chat-input" data-i18n-placeholder="chat_placeholder" placeholder="พิมพ์ข้อความถาม AI..." class="flex-grow bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm dark:text-white transition-all">
-                    <button onclick="sendMessage()" class="bg-primary text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 transition active:scale-95">
-                        <i class="fa-solid fa-paper-plane text-lg"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- VIEW: DEV -->
-            <div id="view-dev" class="hidden animate-fade-in">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-2xl font-black text-primary" data-i18n="tab_dev">ผู้พัฒนา</h2>
-                    <button onclick="switchTab('xray')" class="text-gray-400 hover:text-primary transition"><i class="fa-solid fa-circle-xmark text-2xl"></i></button>
-                </div>
-                <div class="grid md:grid-cols-12 gap-10 items-start">
-                    <div class="md:col-span-4 flex flex-col items-center">
-                        <div class="relative group">
-                            <div class="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-[3.5rem] blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                            <img src="https://lh3.googleusercontent.com/a/ACg8ocKCtiNhu69Sj9y0cJC2UemWtqTtfgg9c91IkejuCzaGKQS4Ibupu4sNtXRKnS08mlHh6tkNdcgMFMpRgexjwB90AkRJkrs=s360-c-no" class="relative w-48 h-48 rounded-[3rem] object-cover shadow-2xl border-4 border-white dark:border-slate-800">
-                        </div>
-                    </div>
-                    <div class="md:col-span-8">
-                        <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold mb-3 uppercase tracking-widest" data-i18n="dev_label">Lead Developer</div>
-                        <h2 class="text-3xl font-black mb-1 tracking-tight">Thachaya Ditjaroen</h2>
-                        <p class="text-primary font-bold text-lg mb-4" data-i18n="dev_title">AI Solutions & Digital Health Architect</p>
-                        <p class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm mb-6" data-i18n="dev_bio">
-                            นักวิจัยและนักพัฒนาผู้มีความหลงใหลในการใช้ปัญญาประดิษฐ์เพื่อยกระดับคุณภาพชีวิตของมนุษย์ เชี่ยวชาญด้าน Computer Vision และ Deep Learning
-                        </p>
-                    </div>
-                </div>
-            </div>
+          </div>
+          <div id="controls-blood" class="mt-6 hidden">
+            <button
+              onclick="runBloodAnalysis()"
+              data-i18n="btn_count"
+              class="bg-secondary text-white px-12 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95"
+            >
+              ตรวจนับเซลล์
+            </button>
+          </div>
+          <div
+            id="result-blood"
+            class="mt-8 hidden p-6 bg-white dark:bg-slate-800 rounded-2xl border-2 border-secondary/20 max-w-xl mx-auto shadow-inner"
+          >
+            <!-- Dynamic detection results -->
+          </div>
         </div>
+
+        <!-- VIEW: CHEST -->
+        <div id="view-chest" class="hidden animate-fade-in text-center">
+          <h2
+            class="text-3xl font-black text-cyan-600 mb-2"
+            data-i18n="chest_title"
+          >
+            Chest X-Ray Analysis
+          </h2>
+          <p class="text-gray-500 mb-8" data-i18n="chest_sub">
+            วิเคราะห์ภาพรังสีทรวงอกด้วย AI
+          </p>
+          <div
+            class="max-w-xl mx-auto border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-3xl p-10 bg-white/30 hover:border-cyan-500 transition cursor-pointer group"
+            onclick="document.getElementById('input-chest').click()"
+          >
+            <input
+              type="file"
+              id="input-chest"
+              class="hidden"
+              accept="image/*"
+              onchange="handleChestUpload(event)"
+            />
+            <div id="status-chest">
+              <i
+                class="fa-solid fa-lungs-virus text-5xl text-gray-300 mb-4 group-hover:text-cyan-500 transition"
+              ></i>
+              <p class="font-bold text-gray-400" data-i18n="upload_chest">
+                อัปโหลดภาพ X-Ray
+              </p>
+            </div>
+            <div class="upload-preview-container w-full relative">
+              <canvas
+                id="canvas-chest"
+                class="max-w-full h-auto rounded-xl shadow-2xl hidden mx-auto"
+              ></canvas>
+            </div>
+          </div>
+          <div id="controls-chest" class="mt-6 hidden">
+            <button
+              onclick="runChestAnalysis()"
+              data-i18n="btn_analyze"
+              class="bg-cyan-600 text-white px-12 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition active:scale-95"
+            >
+              เริ่มวิเคราะห์
+            </button>
+          </div>
+          <div
+            id="result-chest"
+            class="mt-8 hidden p-6 bg-white dark:bg-slate-800 rounded-2xl border-2 border-cyan-600/20 max-w-xl mx-auto shadow-inner"
+          >
+            <!-- Dynamic summary results -->
+          </div>
+        </div>
+
+        <!-- VIEW: CHAT -->
+        <div
+          id="view-chat"
+          class="hidden animate-fade-in flex flex-col h-[520px]"
+        >
+          <div
+            id="chat-box"
+            class="flex-grow overflow-y-auto chat-scroll p-4 space-y-4 bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl mb-4 border border-gray-100 dark:border-slate-800 shadow-inner"
+          ></div>
+          <div id="typing-indicator" class="hidden flex gap-2 ml-14 mb-4">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+          <div class="flex gap-2 p-1">
+            <input
+              type="text"
+              id="chat-input"
+              data-i18n-placeholder="chat_placeholder"
+              placeholder="พิมพ์ข้อความถาม AI..."
+              class="flex-grow bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm dark:text-white transition-all"
+            />
+            <button
+              onclick="sendMessage()"
+              class="bg-primary text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 transition active:scale-95"
+            >
+              <i class="fa-solid fa-paper-plane text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- VIEW: DEV -->
+        <div id="view-dev" class="hidden animate-fade-in">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black text-primary" data-i18n="tab_dev">
+              ผู้พัฒนา
+            </h2>
+            <button
+              onclick="switchTab('xray')"
+              class="text-gray-400 hover:text-primary transition"
+            >
+              <i class="fa-solid fa-circle-xmark text-2xl"></i>
+            </button>
+          </div>
+          <div class="grid md:grid-cols-12 gap-10 items-start">
+            <div class="md:col-span-4 flex flex-col items-center">
+              <div class="relative group">
+                <div
+                  class="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-[3.5rem] blur opacity-25 group-hover:opacity-75 transition duration-1000"
+                ></div>
+                <img
+                  src="https://lh3.googleusercontent.com/a/ACg8ocKCtiNhu69Sj9y0cJC2UemWtqTtfgg9c91IkejuCzaGKQS4Ibupu4sNtXRKnS08mlHh6tkNdcgMFMpRgexjwB90AkRJkrs=s360-c-no"
+                  class="relative w-48 h-48 rounded-[3rem] object-cover shadow-2xl border-4 border-white dark:border-slate-800"
+                />
+              </div>
+            </div>
+            <div class="md:col-span-8">
+              <div
+                class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold mb-3 uppercase tracking-widest"
+                data-i18n="dev_label"
+              >
+                Lead Developer
+              </div>
+              <h2 class="text-3xl font-black mb-1 tracking-tight">
+                Thachaya Ditjaroen
+              </h2>
+              <p
+                class="text-primary font-bold text-lg mb-4"
+                data-i18n="dev_title"
+              >
+                AI Solutions & Digital Health Architect
+              </p>
+              <p
+                class="text-gray-600 dark:text-gray-400 leading-relaxed text-sm mb-6"
+                data-i18n="dev_bio"
+              >
+                นักวิจัยและนักพัฒนาผู้มีความหลงใหลในการใช้ปัญญาประดิษฐ์เพื่อยกระดับคุณภาพชีวิตของมนุษย์
+                เชี่ยวชาญด้าน Computer Vision และ Deep Learning
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Modal Booking -->
-    <div id="booking-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden p-4">
-        <div class="absolute inset-0 bg-black/70 backdrop-blur-md" onclick="closeBooking()"></div>
-        <div class="glass-card w-full max-w-md rounded-[2.5rem] p-8 relative animate-fade-in shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div id="booking-form-content">
-                <h3 class="text-2xl font-bold text-primary mb-6" data-i18n="book_header">นัดหมายปรึกษาแพทย์</h3>
-                <div class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-gray-400 px-1" data-i18n="form_name">ชื่อ-นามสกุล</label>
-                        <input type="text" id="book-patient-name" placeholder="John Doe" class="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl outline-none border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-primary transition">
-                    </div>
-                    
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-gray-400 px-1" data-i18n="form_dept">แผนกที่ต้องการพบ</label>
-                        <select id="dept-select" class="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl outline-none border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-primary transition cursor-pointer">
-                            <option value="ทั่วไป" data-i18n="dept_gen">แผนกทั่วไป (General)</option>
-                            <option value="หู คอ จมูก" data-i18n="dept_ent">หู คอ จมูก (ENT)</option>
-                            <option value="ศัลยกรรม" data-i18n="dept_surg">ศัลยกรรม (Surgery)</option>
-                            <option value="จิตแพทย์" data-i18n="dept_psych">จิตแพทย์ (Psychiatry)</option>
-                            <option value="โรคผิวหนัง" data-i18n="dept_derm">โรคผิวหนัง (Dermatology)</option>
-                            <option value="กุมารเวชกรรม" data-i18n="dept_ped">กุมารเวชกรรม (Pediatrics)</option>
-                            <option value="อายุรกรรม" data-i18n="dept_int">อายุรกรรม (Internal Medicine)</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-gray-400 px-1" data-i18n="form_date">วันที่ต้องการนัดหมาย</label>
-                        <input type="date" id="book-date" class="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl outline-none border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-primary transition">
-                    </div>
-                    <button id="confirm-btn" onclick="handleBookingConfirm()" class="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition active:scale-95 flex items-center justify-center gap-2">
-                        <span id="btn-text" data-i18n="btn_confirm">ยืนยันการนัดหมาย</span>
-                        <i id="btn-loader" class="fa-solid fa-spinner animate-spin hidden"></i>
-                    </button>
-                </div>
+    <div
+      id="booking-modal"
+      class="fixed inset-0 z-[100] flex items-center justify-center hidden p-4"
+    >
+      <div
+        class="absolute inset-0 bg-black/70 backdrop-blur-md"
+        onclick="closeBooking()"
+      ></div>
+      <div
+        class="glass-card w-full max-w-md rounded-[2.5rem] p-8 relative animate-fade-in shadow-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <div id="booking-form-content">
+          <h3
+            class="text-2xl font-bold text-primary mb-6"
+            data-i18n="book_header"
+          >
+            นัดหมายปรึกษาแพทย์
+          </h3>
+          <div class="space-y-4">
+            <div class="space-y-1">
+              <label
+                class="text-xs font-bold text-gray-400 px-1"
+                data-i18n="form_name"
+                >ชื่อ-นามสกุล</label
+              >
+              <input
+                type="text"
+                id="book-patient-name"
+                placeholder="John Doe"
+                class="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl outline-none border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-primary transition"
+              />
             </div>
 
-            <!-- Result Recommendation Section -->
-            <div id="booking-success-content" class="hidden text-center animate-fade-in">
-                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-inner">
-                    <i class="fa-solid fa-check"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2" data-i18n="book_success">นัดหมายสำเร็จ!</h3>
-                <p class="text-sm text-gray-500 mb-6" data-i18n="recommend_text">ตารางเวลาแพทย์ที่ใกล้ที่สุดในขณะนี้:</p>
-                
-                <div id="doctor-card" class="bg-gray-50 dark:bg-slate-800 p-6 rounded-3xl border border-primary/20 text-left space-y-3 mb-6 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-3"><span class="bg-green-500 text-white text-[10px] px-2 py-1 rounded-full font-bold uppercase" data-i18n="status_available">Available Now</span></div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl">
-                            <i class="fa-solid fa-user-md"></i>
-                        </div>
-                        <div>
-                            <h4 id="rec-doc-name" class="font-bold text-lg text-primary leading-tight">...</h4>
-                            <p id="rec-hosp-name" class="text-sm text-gray-500 leading-tight">...</p>
-                        </div>
-                    </div>
-                    <div class="pt-2 flex flex-wrap gap-2">
-                        <span class="text-[10px] bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-slate-700 font-medium"><i class="fa-solid fa-location-dot mr-1"></i> <span id="rec-distance">...</span></span>
-                        <span class="text-[10px] bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-slate-700 font-medium"><i class="fa-solid fa-calendar-check mr-1"></i> <span id="rec-schedule">เวรปฏิบัติงาน: 09:00 - 17:00</span></span>
-                    </div>
-                </div>
-
-                <button onclick="closeBooking()" class="text-gray-400 font-bold hover:text-primary transition text-sm">ปิดหน้าต่าง</button>
+            <div class="space-y-1">
+              <label
+                class="text-xs font-bold text-gray-400 px-1"
+                data-i18n="form_dept"
+                >แผนกที่ต้องการพบ</label
+              >
+              <select
+                id="dept-select"
+                class="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl outline-none border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-primary transition cursor-pointer"
+              >
+                <option value="ทั่วไป" data-i18n="dept_gen">
+                  แผนกทั่วไป (General)
+                </option>
+                <option value="หู คอ จมูก" data-i18n="dept_ent">
+                  หู คอ จมูก (ENT)
+                </option>
+                <option value="ศัลยกรรม" data-i18n="dept_surg">
+                  ศัลยกรรม (Surgery)
+                </option>
+                <option value="จิตแพทย์" data-i18n="dept_psych">
+                  จิตแพทย์ (Psychiatry)
+                </option>
+                <option value="โรคผิวหนัง" data-i18n="dept_derm">
+                  โรคผิวหนัง (Dermatology)
+                </option>
+                <option value="กุมารเวชกรรม" data-i18n="dept_ped">
+                  กุมารเวชกรรม (Pediatrics)
+                </option>
+                <option value="อายุรกรรม" data-i18n="dept_int">
+                  อายุรกรรม (Internal Medicine)
+                </option>
+              </select>
             </div>
+
+            <div class="space-y-1">
+              <label
+                class="text-xs font-bold text-gray-400 px-1"
+                data-i18n="form_date"
+                >วันที่ต้องการนัดหมาย</label
+              >
+              <input
+                type="date"
+                id="book-date"
+                class="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl outline-none border border-gray-100 dark:border-slate-700 focus:ring-2 focus:ring-primary transition"
+              />
+            </div>
+            <button
+              id="confirm-btn"
+              onclick="handleBookingConfirm()"
+              class="w-full py-4 bg-primary text-white rounded-xl font-bold shadow-lg hover:opacity-90 transition active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span id="btn-text" data-i18n="btn_confirm"
+                >ยืนยันการนัดหมาย</span
+              >
+              <i
+                id="btn-loader"
+                class="fa-solid fa-spinner animate-spin hidden"
+              ></i>
+            </button>
+          </div>
         </div>
+
+        <!-- Result Recommendation Section -->
+        <div
+          id="booking-success-content"
+          class="hidden text-center animate-fade-in"
+        >
+          <div
+            class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-inner"
+          >
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <h3
+            class="text-2xl font-bold text-gray-800 dark:text-white mb-2"
+            data-i18n="book_success"
+          >
+            นัดหมายสำเร็จ!
+          </h3>
+          <p class="text-sm text-gray-500 mb-6" data-i18n="recommend_text">
+            ตารางเวลาแพทย์ที่ใกล้ที่สุดในขณะนี้:
+          </p>
+
+          <div
+            id="doctor-card"
+            class="bg-gray-50 dark:bg-slate-800 p-6 rounded-3xl border border-primary/20 text-left space-y-3 mb-6 relative overflow-hidden"
+          >
+            <div class="absolute top-0 right-0 p-3">
+              <span
+                class="bg-green-500 text-white text-[10px] px-2 py-1 rounded-full font-bold uppercase"
+                data-i18n="status_available"
+                >Available Now</span
+              >
+            </div>
+            <div class="flex items-center gap-4">
+              <div
+                class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl"
+              >
+                <i class="fa-solid fa-user-md"></i>
+              </div>
+              <div>
+                <h4
+                  id="rec-doc-name"
+                  class="font-bold text-lg text-primary leading-tight"
+                >
+                  ...
+                </h4>
+                <p
+                  id="rec-hosp-name"
+                  class="text-sm text-gray-500 leading-tight"
+                >
+                  ...
+                </p>
+              </div>
+            </div>
+            <div class="pt-2 flex flex-wrap gap-2">
+              <span
+                class="text-[10px] bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-slate-700 font-medium"
+                ><i class="fa-solid fa-location-dot mr-1"></i>
+                <span id="rec-distance">...</span></span
+              >
+              <span
+                class="text-[10px] bg-white dark:bg-slate-900 px-3 py-1 rounded-lg border border-gray-100 dark:border-slate-700 font-medium"
+                ><i class="fa-solid fa-calendar-check mr-1"></i>
+                <span id="rec-schedule"
+                  >เวรปฏิบัติงาน: 09:00 - 17:00</span
+                ></span
+              >
+            </div>
+          </div>
+
+          <button
+            onclick="closeBooking()"
+            class="text-gray-400 font-bold hover:text-primary transition text-sm"
+          >
+            ปิดหน้าต่าง
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
-        const apiKey = ""; 
-        let scene, camera, renderer, particles, currentLang = 'th';
-        let chestFile = null;
-        let chestImage = null;
+      let scene,
+        camera,
+        renderer,
+        particles,
+        currentLang = "th";
+      let skinFile = null,
+        skinImage = null;
+      let bloodFile = null,
+        bloodImage = null;
+      let chestFile = null,
+        chestImage = null;
 
-        const doctorDatabase = {
-            "ทั่วไป": [
-                { name: "นพ. กิตติศักดิ์ อักษรวงศ์", hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ", dist: "1.5 km", schedule: "08:00 - 16:00" },
-                { name: "พญ. นวรัตน์ ด่านชัยวิจิตร", hosp: "โรงพยาบาลศิครินทร์", dist: "4.2 km", schedule: "09:00 - 20:00" }
-            ],
-            "หู คอ จมูก": [
-                { name: "นพ. ณรงค์ศักดิ์ สากลเกียรติ", hosp: "โรงพยาบาลจุฬารัตน์ 9", dist: "3.8 km", schedule: "10:00 - 18:00" },
-                { name: "พญ. สุจิรา สว่างวุฒิธรรม", hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ", dist: "1.5 km", schedule: "09:00 - 17:00" }
-            ],
-            "ศัลยกรรม": [
-                { name: "นพ. มานิต ธีระตันติกานนท์", hosp: "โรงพยาบาลเปาโล สมุทรปราการ", dist: "6.7 km", schedule: "24 ชั่วโมง" },
-                { name: "นพ. ทรงพล ชวาลตันพิพัทธ์", hosp: "โรงพยาบาลบางนา 5", dist: "2.4 km", schedule: "08:00 - 20:00" }
-            ],
-            "จิตแพทย์": [
-                { name: "พญ. อัมพร เบญจพลพิทักษ์", hosp: "โรงพยาบาลไทยนครินทร์", dist: "5.1 km", schedule: "13:00 - 19:00" },
-                { name: "นพ. ปราโมทย์ สุคนธมาน", hosp: "โรงพยาบาลจุฬาฯ (คลินิกนอกเวลา)", dist: "12.0 km", schedule: "16:00 - 20:00" }
-            ],
-            "โรคผิวหนัง": [
-                { name: "พญ. รัชต์ธร ปัญจประทีป", hosp: "โรงพยาบาลผิวหนัง อโศก", dist: "15.2 km", schedule: "10:00 - 20:00" },
-                { name: "พญ. พรทิพย์ สิริกัญจนาพงศ์", hosp: "โรงพยาบาลศิครินทร์", dist: "4.2 km", schedule: "09:00 - 17:00" }
-            ],
-            "กุมารเวชกรรม": [
-                { name: "นพ. ธีระพงษ์ ตุนาค", hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ", dist: "1.5 km", schedule: "07:00 - 21:00" },
-                { name: "พญ. อรวรรณ ประทุมทิพย์", hosp: "โรงพยาบาลบางแก้ว", dist: "3.2 km", schedule: "09:00 - 17:00" }
-            ],
-            "อายุรกรรม": [
-                { name: "นพ. ประสิทธิ์ วัฒนาภา", hosp: "โรงพยาบาลวิชัยยุทธ", dist: "18.5 km", schedule: "08:00 - 14:00" },
-                { name: "นพ. สุรพล โล่ห์สิริวัฒน์", hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ", dist: "1.5 km", schedule: "09:00 - 20:00" }
-            ]
+      const doctorDatabase = {
+        ทั่วไป: [
+          {
+            name: "นพ. กิตติศักดิ์ อักษรวงศ์",
+            hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ",
+            dist: "1.5 km",
+            schedule: "08:00 - 16:00",
+          },
+          {
+            name: "พญ. นวรัตน์ ด่านชัยวิจิตร",
+            hosp: "โรงพยาบาลศิครินทร์",
+            dist: "4.2 km",
+            schedule: "09:00 - 20:00",
+          },
+        ],
+        "หู คอ จมูก": [
+          {
+            name: "นพ. ณรงค์ศักดิ์ สากลเกียรติ",
+            hosp: "โรงพยาบาลจุฬารัตน์ 9",
+            dist: "3.8 km",
+            schedule: "10:00 - 18:00",
+          },
+          {
+            name: "พญ. สุจิรา สว่างวุฒิธรรม",
+            hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ",
+            dist: "1.5 km",
+            schedule: "09:00 - 17:00",
+          },
+        ],
+        ศัลยกรรม: [
+          {
+            name: "นพ. มานิต ธีระตันติกานนท์",
+            hosp: "โรงพยาบาลเปาโล สมุทรปราการ",
+            dist: "6.7 km",
+            schedule: "24 ชั่วโมง",
+          },
+          {
+            name: "นพ. ทรงพล ชวาลตันพิพัทธ์",
+            hosp: "โรงพยาบาลบางนา 5",
+            dist: "2.4 km",
+            schedule: "08:00 - 20:00",
+          },
+        ],
+        จิตแพทย์: [
+          {
+            name: "พญ. อัมพร เบญจพลพิทักษ์",
+            hosp: "โรงพยาบาลไทยนครินทร์",
+            dist: "5.1 km",
+            schedule: "13:00 - 19:00",
+          },
+          {
+            name: "นพ. ปราโมทย์ สุคนธมาน",
+            hosp: "โรงพยาบาลจุฬาฯ (คลินิกนอกเวลา)",
+            dist: "12.0 km",
+            schedule: "16:00 - 20:00",
+          },
+        ],
+        โรคผิวหนัง: [
+          {
+            name: "พญ. รัชต์ธร ปัญจประทีป",
+            hosp: "โรงพยาบาลผิวหนัง อโศก",
+            dist: "15.2 km",
+            schedule: "10:00 - 20:00",
+          },
+          {
+            name: "พญ. พรทิพย์ สิริกัญจนาพงศ์",
+            hosp: "โรงพยาบาลศิครินทร์",
+            dist: "4.2 km",
+            schedule: "09:00 - 17:00",
+          },
+        ],
+        กุมารเวชกรรม: [
+          {
+            name: "นพ. ธีระพงษ์ ตุนาค",
+            hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ",
+            dist: "1.5 km",
+            schedule: "07:00 - 21:00",
+          },
+          {
+            name: "พญ. อรวรรณ ประทุมทิพย์",
+            hosp: "โรงพยาบาลบางแก้ว",
+            dist: "3.2 km",
+            schedule: "09:00 - 17:00",
+          },
+        ],
+        อายุรกรรม: [
+          {
+            name: "นพ. ประสิทธิ์ วัฒนาภา",
+            hosp: "โรงพยาบาลวิชัยยุทธ",
+            dist: "18.5 km",
+            schedule: "08:00 - 14:00",
+          },
+          {
+            name: "นพ. สุรพล โล่ห์สิริวัฒน์",
+            hosp: "โรงพยาบาลพริ้นซ์ สุวรรณภูมิ",
+            dist: "1.5 km",
+            schedule: "09:00 - 20:00",
+          },
+        ],
+      };
+
+      const i18n = {
+        th: {
+          nav_book: "นัดหมายแพทย์",
+          tab_skin: "มะเร็งผิวหนัง",
+          tab_blood: "ตรวจเม็ดเลือด",
+          tab_chest: "เอกซเรย์ปอด",
+          tab_chat: "ปรึกษา AI",
+          tab_dev: "ผู้พัฒนา",
+          skin_title: "Skin Cancer Analysis",
+          skin_sub: "วิเคราะห์ความเสี่ยงมะเร็งผิวหนังจากภาพถ่าย",
+          upload_text: "อัปโหลดภาพที่นี่",
+          btn_analyze: "เริ่มวิเคราะห์",
+          res_header: "ผลการวิเคราะห์",
+          blood_title: "Blood Cell Identification",
+          upload_blood: "อัปโหลดภาพสไลด์เม็ดเลือด",
+          btn_count: "ตรวจนับเซลล์",
+          res_blood_header: "สรุปการตรวจพบ",
+          chest_title: "Chest X-Ray Analysis",
+          chest_sub: "วิเคราะห์ภาพรังสีทรวงอกด้วย AI (YOLO)",
+          upload_chest: "อัปโหลดภาพ X-Ray ที่นี่",
+          chest_res_header: "ผลการวิเคราะห์",
+          chest_normal_sub: "ไม่พบความผิดปกติที่ชัดเจนบนภาพรังสี",
+          chat_placeholder: "พิมพ์ข้อความถาม AI...",
+          dev_label: "หัวหน้าทีมนักพัฒนา",
+          dev_title: "สถาปนิกโซลูชัน AI และสุขภาพดิจิทัล",
+          dev_bio:
+            "นักวิจัยและนักพัฒนาผู้มีความหลงใหลในการใช้ปัญญาประดิษฐ์เพื่อยกระดับคุณภาพชีวิตของมนุษย์ เชี่ยวชาญด้าน Computer Vision และ Deep Learning",
+          book_header: "นัดหมายปรึกษาแพทย์",
+          form_name: "ชื่อ-นามสกุล",
+          form_dept: "แผนกที่ต้องการพบ",
+          form_date: "วันที่ต้องการนัดหมาย",
+          btn_confirm: "ยืนยันการนัดหมาย",
+          dept_gen: "แผนกทั่วไป (General)",
+          dept_ent: "หู คอ จมูก (ENT)",
+          dept_surg: "ศัลยกรรม (Surgery)",
+          dept_psych: "จิตแพทย์ (Psychiatry)",
+          dept_derm: "โรคผิวหนัง (Dermatology)",
+          dept_ped: "กุมารเวชกรรม (Pediatrics)",
+          dept_int: "อายุรกรรม (Internal Medicine)",
+          book_success: "นัดหมายสำเร็จ!",
+          recommend_text: "ตารางเวลาแพทย์ที่ใกล้ที่สุดในขณะนี้:",
+          status_available: "ว่างขณะนี้",
+        },
+        en: {
+          nav_book: "Book Doctor",
+          tab_skin: "Skin Cancer",
+          tab_blood: "Blood Cell",
+          tab_chest: "Chest X-Ray",
+          tab_chat: "Ask AI",
+          tab_dev: "Developer",
+          skin_title: "Skin Cancer Analysis",
+          skin_sub: "AI-powered detection from dermatological images",
+          upload_text: "Click to upload image",
+          btn_analyze: "Analyze Now",
+          res_header: "Analysis Result",
+          blood_title: "Blood Cell Identification",
+          upload_blood: "Upload blood smear slide",
+          btn_count: "Count Cells",
+          res_blood_header: "Detection Summary",
+          chest_title: "Chest X-Ray Analysis",
+          chest_sub: "AI-powered detection using Ultralytics YOLO",
+          upload_chest: "Upload X-Ray Image",
+          chest_res_header: "Analysis Results",
+          chest_normal_sub: "No significant abnormalities detected.",
+          chat_placeholder: "Ask AI anything...",
+          dev_label: "Lead Developer",
+          dev_title: "AI Solutions & Digital Health Architect",
+          dev_bio:
+            "Passionate researcher and developer dedicated to leveraging AI to improve human lives.",
+          book_header: "Doctor Appointment",
+          form_name: "Full Name",
+          form_dept: "Target Department",
+          form_date: "Preferred Date",
+          btn_confirm: "Confirm Booking",
+          dept_gen: "General Clinic",
+          dept_ent: "ENT (Ear, Nose, Throat)",
+          dept_surg: "Surgery",
+          dept_psych: "Psychiatry",
+          dept_derm: "Dermatology",
+          dept_ped: "Pediatrics",
+          dept_int: "Internal Medicine",
+          book_success: "Booking Successful!",
+          recommend_text: "Current nearest available doctor schedule:",
+          status_available: "Available Now",
+        },
+      };
+
+      function updateUI() {
+        const data = i18n[currentLang];
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (data[key]) el.innerText = data[key];
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const key = el.getAttribute("data-i18n-placeholder");
+          if (data[key]) el.placeholder = data[key];
+        });
+        document.getElementById("lang-btn").querySelector("span").innerText =
+          currentLang === "th" ? "EN" : "TH";
+      }
+
+      function toggleLanguage() {
+        currentLang = currentLang === "th" ? "en" : "th";
+        document.body.setAttribute("data-lang", currentLang);
+        updateUI();
+      }
+
+      function handleBookingConfirm() {
+        const btn = document.getElementById("confirm-btn");
+        const loader = document.getElementById("btn-loader");
+        const btnText = document.getElementById("btn-text");
+        const dept = document.getElementById("dept-select").value;
+
+        if (!btn || !loader || !btnText) return;
+
+        btn.disabled = true;
+        btnText.classList.add("hidden");
+        loader.classList.remove("hidden");
+
+        setTimeout(() => {
+          const list = doctorDatabase[dept] || doctorDatabase["ทั่วไป"];
+          const result = list[Math.floor(Math.random() * list.length)];
+
+          document.getElementById("rec-doc-name").innerText = result.name;
+          document.getElementById("rec-hosp-name").innerText = result.hosp;
+          document.getElementById("rec-distance").innerText = result.dist;
+          document.getElementById("rec-schedule").innerText =
+            `เวรปฏิบัติงาน: ${result.schedule}`;
+
+          document
+            .getElementById("booking-form-content")
+            .classList.add("hidden");
+          document
+            .getElementById("booking-success-content")
+            .classList.remove("hidden");
+
+          btn.disabled = false;
+          btnText.classList.remove("hidden");
+          loader.classList.add("hidden");
+        }, 1200);
+      }
+
+      function init3D() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000,
+        );
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document
+          .getElementById("canvas-container")
+          .appendChild(renderer.domElement);
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(800 * 3);
+        for (let i = 0; i < 800 * 3; i++) pos[i] = (Math.random() - 0.5) * 40;
+        geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({
+          color: 0x1c5f58,
+          size: 0.1,
+          transparent: true,
+          opacity: 0.4,
+        });
+        particles = new THREE.Points(geo, mat);
+        scene.add(particles);
+        camera.position.z = 15;
+        function animate() {
+          requestAnimationFrame(animate);
+          particles.rotation.y += 0.0003;
+          renderer.render(scene, camera);
+        }
+        animate();
+      }
+
+      function switchTab(id) {
+        ["xray", "blood", "chest", "chat", "dev"].forEach((t) => {
+          const v = document.getElementById(`view-${t}`);
+          if (v) v.classList.add("hidden");
+          const b = document.getElementById(`tab-btn-${t}`);
+          if (b) b.classList.remove("active");
+        });
+        document.getElementById(`view-${id}`).classList.remove("hidden");
+        const tb = document.getElementById(`tab-btn-${id}`);
+        if (tb) tb.classList.add("active");
+      }
+
+      // ===== Generic YOLO Detection Utilities =====
+      function getDetectionColor(className) {
+        const name = (className || "").toLowerCase();
+        const colorMap = {
+          melanoma: "#ef4444",
+          malignant: "#ef4444",
+          covid: "#ef4444",
+          benign: "#10b981",
+          normal: "#10b981",
+          nevus: "#10b981",
+          basal: "#f59e0b",
+          squamous: "#f97316",
+          opacity: "#f59e0b",
+          rbc: "#ef4444",
+          red: "#ef4444",
+          wbc: "#3b82f6",
+          white: "#3b82f6",
+          platelet: "#a855f7",
+          platelets: "#a855f7",
+          neutrophil: "#06b6d4",
+          lymphocyte: "#8b5cf6",
+          monocyte: "#f59e0b",
+          eosinophil: "#ec4899",
+          basophil: "#6366f1",
         };
-
-        const i18n = {
-            th: {
-                nav_book: "นัดหมายแพทย์",
-                tab_skin: "มะเร็งผิวหนัง",
-                tab_blood: "ตรวจเม็ดเลือด",
-                tab_chest: "เอกซเรย์ปอด",
-                tab_chat: "ปรึกษา AI",
-                tab_dev: "ผู้พัฒนา",
-                skin_title: "Skin Cancer Analysis",
-                skin_sub: "วิเคราะห์ความเสี่ยงมะเร็งผิวหนังจากภาพถ่าย",
-                upload_text: "อัปโหลดภาพที่นี่",
-                btn_analyze: "เริ่มวิเคราะห์",
-                res_header: "ผลการวิเคราะห์",
-                blood_title: "Blood Cell Identification",
-                upload_blood: "อัปโหลดภาพสไลด์เม็ดเลือด",
-                btn_count: "ตรวจนับเซลล์",
-                res_blood_header: "สรุปการตรวจพบ",
-                chest_title: "Chest X-Ray Analysis",
-                chest_sub: "วิเคราะห์ภาพรังสีทรวงอกด้วย AI (YOLO)",
-                upload_chest: "อัปโหลดภาพ X-Ray ที่นี่",
-                chest_res_header: "ผลการวิเคราะห์",
-                chest_normal_sub: "ไม่พบความผิดปกติที่ชัดเจนบนภาพรังสี",
-                chat_placeholder: "พิมพ์ข้อความถาม AI...",
-                dev_label: "หัวหน้าทีมนักพัฒนา",
-                dev_title: "สถาปนิกโซลูชัน AI และสุขภาพดิจิทัล",
-                dev_bio: "นักวิจัยและนักพัฒนาผู้มีความหลงใหลในการใช้ปัญญาประดิษฐ์เพื่อยกระดับคุณภาพชีวิตของมนุษย์ เชี่ยวชาญด้าน Computer Vision และ Deep Learning",
-                book_header: "นัดหมายปรึกษาแพทย์",
-                form_name: "ชื่อ-นามสกุล",
-                form_dept: "แผนกที่ต้องการพบ",
-                form_date: "วันที่ต้องการนัดหมาย",
-                btn_confirm: "ยืนยันการนัดหมาย",
-                dept_gen: "แผนกทั่วไป (General)",
-                dept_ent: "หู คอ จมูก (ENT)",
-                dept_surg: "ศัลยกรรม (Surgery)",
-                dept_psych: "จิตแพทย์ (Psychiatry)",
-                dept_derm: "โรคผิวหนัง (Dermatology)",
-                dept_ped: "กุมารเวชกรรม (Pediatrics)",
-                dept_int: "อายุรกรรม (Internal Medicine)",
-                book_success: "นัดหมายสำเร็จ!",
-                recommend_text: "ตารางเวลาแพทย์ที่ใกล้ที่สุดในขณะนี้:",
-                status_available: "ว่างขณะนี้"
-            },
-            en: {
-                nav_book: "Book Doctor",
-                tab_skin: "Skin Cancer",
-                tab_blood: "Blood Cell",
-                tab_chest: "Chest X-Ray",
-                tab_chat: "Ask AI",
-                tab_dev: "Developer",
-                skin_title: "Skin Cancer Analysis",
-                skin_sub: "AI-powered detection from dermatological images",
-                upload_text: "Click to upload image",
-                btn_analyze: "Analyze Now",
-                res_header: "Analysis Result",
-                blood_title: "Blood Cell Identification",
-                upload_blood: "Upload blood smear slide",
-                btn_count: "Count Cells",
-                res_blood_header: "Detection Summary",
-                chest_title: "Chest X-Ray Analysis",
-                chest_sub: "AI-powered detection using Ultralytics YOLO",
-                upload_chest: "Upload X-Ray Image",
-                chest_res_header: "Analysis Results",
-                chest_normal_sub: "No significant abnormalities detected.",
-                chat_placeholder: "Ask AI anything...",
-                dev_label: "Lead Developer",
-                dev_title: "AI Solutions & Digital Health Architect",
-                dev_bio: "Passionate researcher and developer dedicated to leveraging AI to improve human lives.",
-                book_header: "Doctor Appointment",
-                form_name: "Full Name",
-                form_dept: "Target Department",
-                form_date: "Preferred Date",
-                btn_confirm: "Confirm Booking",
-                dept_gen: "General Clinic",
-                dept_ent: "ENT (Ear, Nose, Throat)",
-                dept_surg: "Surgery",
-                dept_psych: "Psychiatry",
-                dept_derm: "Dermatology",
-                dept_ped: "Pediatrics",
-                dept_int: "Internal Medicine",
-                book_success: "Booking Successful!",
-                recommend_text: "Current nearest available doctor schedule:",
-                status_available: "Available Now"
-            }
-        };
-
-        function updateUI() {
-            const data = i18n[currentLang];
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (data[key]) el.innerText = data[key];
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (data[key]) el.placeholder = data[key];
-            });
-            document.getElementById('lang-btn').querySelector('span').innerText = currentLang === 'th' ? 'EN' : 'TH';
+        for (const [key, color] of Object.entries(colorMap)) {
+          if (name.includes(key)) return color;
         }
+        // Fallback — cycle through palette
+        const palette = [
+          "#06b6d4",
+          "#f59e0b",
+          "#8b5cf6",
+          "#ec4899",
+          "#10b981",
+          "#ef4444",
+        ];
+        let hash = 0;
+        for (let i = 0; i < name.length; i++)
+          hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        return palette[Math.abs(hash) % palette.length];
+      }
 
-        function toggleLanguage() {
-            currentLang = currentLang === 'th' ? 'en' : 'th';
-            document.body.setAttribute('data-lang', currentLang);
-            updateUI();
-        }
+      function drawDetectionBoxes(canvasId, predictions) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext("2d");
 
-        function handleBookingConfirm() {
-            const btn = document.getElementById('confirm-btn');
-            const loader = document.getElementById('btn-loader');
-            const btnText = document.getElementById('btn-text');
-            const dept = document.getElementById('dept-select').value;
-            
-            if (!btn || !loader || !btnText) return;
+        predictions.forEach((pred) => {
+          const name = pred.name || pred.class || "Unknown";
+          const conf = pred.confidence || pred.conf || 0;
+          const confPercent = Math.round(conf * 100);
+          const color = getDetectionColor(name);
 
-            btn.disabled = true;
-            btnText.classList.add('hidden');
-            loader.classList.remove('hidden');
+          let box = pred.box || pred.bbox || {};
+          let x1 = box.x1 !== undefined ? box.x1 : box.x || 0;
+          let y1 = box.y1 !== undefined ? box.y1 : box.y || 0;
+          let x2 = box.x2 !== undefined ? box.x2 : box.x + box.w || 0;
+          let y2 = box.y2 !== undefined ? box.y2 : box.y + box.h || 0;
 
-            setTimeout(() => {
-                const list = doctorDatabase[dept] || doctorDatabase["ทั่วไป"];
-                const result = list[Math.floor(Math.random() * list.length)];
+          if (x2 <= 1.0 && y2 <= 1.0) {
+            x1 *= canvas.width;
+            y1 *= canvas.height;
+            x2 *= canvas.width;
+            y2 *= canvas.height;
+          }
 
-                document.getElementById('rec-doc-name').innerText = result.name;
-                document.getElementById('rec-hosp-name').innerText = result.hosp;
-                document.getElementById('rec-distance').innerText = result.dist;
-                document.getElementById('rec-schedule').innerText = `เวรปฏิบัติงาน: ${result.schedule}`;
+          const w = x2 - x1;
+          const h = y2 - y1;
 
-                document.getElementById('booking-form-content').classList.add('hidden');
-                document.getElementById('booking-success-content').classList.remove('hidden');
+          ctx.globalAlpha = 0.25;
+          ctx.fillStyle = color;
+          ctx.fillRect(x1, y1, w, h);
 
-                btn.disabled = false;
-                btnText.classList.remove('hidden');
-                loader.classList.add('hidden');
-            }, 1200);
-        }
+          ctx.globalAlpha = 1.0;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = Math.max(2, canvas.width * 0.003);
+          ctx.strokeRect(x1, y1, w, h);
 
-        function init3D() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
-            const geo = new THREE.BufferGeometry();
-            const pos = new Float32Array(800 * 3);
-            for(let i=0; i<800*3; i++) pos[i] = (Math.random() - 0.5) * 40;
-            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            const mat = new THREE.PointsMaterial({ color: 0x1c5f58, size: 0.1, transparent: true, opacity: 0.4 });
-            particles = new THREE.Points(geo, mat);
-            scene.add(particles);
-            camera.position.z = 15;
-            function animate() { requestAnimationFrame(animate); particles.rotation.y += 0.0003; renderer.render(scene, camera); }
-            animate();
-        }
+          const fontSize = Math.max(14, canvas.width * 0.022);
+          ctx.font = `600 ${fontSize}px Prompt, sans-serif`;
+          ctx.shadowColor = "rgba(0,0,0,0.8)";
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+          ctx.fillStyle = color;
+          const textY = y1 > fontSize + 5 ? y1 - 8 : y1 + fontSize + 8;
+          ctx.fillText(`${name} ${confPercent}%`, x1, textY);
+          ctx.shadowColor = "transparent";
+          ctx.shadowBlur = 0;
+        });
+      }
 
-        function switchTab(id) {
-            ['xray', 'blood', 'chest', 'chat', 'dev'].forEach(t => {
-                const v = document.getElementById(`view-${t}`);
-                if (v) v.classList.add('hidden');
-                const b = document.getElementById(`tab-btn-${t}`);
-                if(b) b.classList.remove('active');
-            });
-            document.getElementById(`view-${id}`).classList.remove('hidden');
-            const tb = document.getElementById(`tab-btn-${id}`);
-            if(tb) tb.classList.add('active');
-        }
+      function parsePredictions(data) {
+        if (data.images && data.images.length > 0 && data.images[0].results)
+          return data.images[0].results;
+        if (data.predictions) return data.predictions;
+        if (Array.isArray(data)) return data;
+        return [];
+      }
 
-        function handleFileUpload(event, previewId) {
-            const file = event.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.getElementById(previewId);
-                img.src = e.target.result;
-                img.classList.remove('hidden');
-                document.getElementById(previewId.replace('preview', 'status')).classList.add('hidden');
-                document.getElementById(previewId.replace('preview', 'controls')).classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
+      function renderDetectionSummary(
+        resBoxId,
+        predictions,
+        themeColor,
+        headerKey,
+      ) {
+        const resBox = document.getElementById(resBoxId);
+        resBox.classList.remove("hidden");
 
-        function runAnalysis(type) {
-            const resBox = document.getElementById(`result-${type}`);
-            const btn = document.querySelector(`#controls-${type} button`);
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
-            setTimeout(() => {
-                btn.innerHTML = i18n[currentLang].btn_analyze || "Analyze";
-                resBox.classList.remove('hidden');
-                if(type === 'xray') {
-                    document.getElementById('res-val-xray').innerText = Math.random() > 0.5 ? "Benign" : "Malignant";
-                    document.getElementById('res-prob-xray').innerText = `Confidence: ${(90 + Math.random()*9).toFixed(2)}%`;
-                } else {
-                    document.getElementById('res-val-blood').innerText = "Healthy White Blood Cells Counted";
-                    document.getElementById('blood-progress-container').innerHTML = `<div class="h-2 bg-secondary rounded-full w-[98%]"></div>`;
-                }
-            }, 1000);
-        }
-
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            document.getElementById('theme-icon').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-            document.getElementById('canvas-container').style.background = isDark ? '#020617' : 'linear-gradient(135deg, #f0f9f9 0%, #ffffff 100%)';
-        }
-
-        function openBooking() { 
-            document.getElementById('booking-modal').classList.remove('hidden'); 
-            document.getElementById('booking-form-content').classList.remove('hidden');
-            document.getElementById('booking-success-content').classList.add('hidden');
-        }
-        function closeBooking() { document.getElementById('booking-modal').classList.add('hidden'); }
-
-        function getChestClassColor(className) {
-            const name = className.toLowerCase();
-            if (name.includes('covid')) return '#ef4444';
-            if (name.includes('normal')) return '#10b981';
-            if (name.includes('opacity')) return '#f59e0b';
-            return '#06b6d4';
-        }
-
-        function handleChestUpload(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-            chestFile = file;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    chestImage = img;
-                    const canvas = document.getElementById('canvas-chest');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                    canvas.classList.remove('hidden');
-                    
-                    document.getElementById('status-chest').classList.add('hidden');
-                    document.getElementById('controls-chest').classList.remove('hidden');
-                    document.getElementById('result-chest').classList.add('hidden');
-                    document.querySelector('#controls-chest button').innerHTML = i18n[currentLang].btn_analyze || "Analyze Now";
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function runChestAnalysis() {
-            if (!chestFile) return;
-            const btn = document.querySelector('#controls-chest button');
-            const resBox = document.getElementById('result-chest');
-            
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
-            btn.disabled = true;
-            
-            const canvas = document.getElementById('canvas-chest');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(chestImage, 0, 0);
-
-            const formData = new FormData();
-            formData.append('file', chestFile);
-            formData.append('conf', "0.25");
-            formData.append('iou', "0.7");
-            formData.append('imgsz', "640");
-
-            try {
-                const response = await fetch("/api/ultralyticsPredict", {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ul_0fd5ac8b3d35fd1992e4618c92b504b78e4cb187' },
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error("API Error");
-                const data = await response.json();
-                
-                let predictions = [];
-                if (data.images && data.images.length > 0 && data.images[0].results) {
-                    predictions = data.images[0].results;
-                } else if (data.predictions) {
-                    predictions = data.predictions;
-                } else if (Array.isArray(data)) {
-                    predictions = data;
-                }
-
-                drawChestBoxes(predictions);
-                updateChestSummary(predictions);
-
-            } catch (error) {
-                console.error(error);
-                resBox.classList.remove('hidden');
-                resBox.innerHTML = `<div class="text-center text-red-500 font-bold p-4">Error connecting to analysis server.</div>`;
-            } finally {
-                btn.innerHTML = i18n[currentLang].btn_analyze || "Analyze Now";
-                btn.disabled = false;
-            }
-        }
-
-        function drawChestBoxes(predictions) {
-            const canvas = document.getElementById('canvas-chest');
-            const ctx = canvas.getContext('2d');
-
-            predictions.forEach(pred => {
-                const name = pred.name || pred.class || "Unknown";
-                const conf = pred.confidence || pred.conf || 0;
-                const confPercent = Math.round(conf * 100);
-                const color = getChestClassColor(name);
-                
-                let box = pred.box || pred.bbox || {};
-                let x1 = box.x1 !== undefined ? box.x1 : box.x || 0;
-                let y1 = box.y1 !== undefined ? box.y1 : box.y || 0;
-                let x2 = box.x2 !== undefined ? box.x2 : (box.x + box.w) || 0;
-                let y2 = box.y2 !== undefined ? box.y2 : (box.y + box.h) || 0;
-
-                // Handle Normalized coordinates
-                if (x2 <= 1.0 && y2 <= 1.0) {
-                    x1 *= canvas.width; y1 *= canvas.height;
-                    x2 *= canvas.width; y2 *= canvas.height;
-                }
-
-                const w = x2 - x1; const h = y2 - y1;
-
-                // Filled Box (25% opacity)
-                ctx.globalAlpha = 0.25;
-                ctx.fillStyle = color;
-                ctx.fillRect(x1, y1, w, h);
-
-                // Solid border
-                ctx.globalAlpha = 1.0;
-                ctx.strokeStyle = color;
-                ctx.lineWidth = Math.max(2, canvas.width * 0.003);
-                ctx.strokeRect(x1, y1, w, h);
-
-                // Text styling (Shadow only, NO solid background)
-                const fontSize = Math.max(16, canvas.width * 0.025);
-                ctx.font = `600 ${fontSize}px Prompt, sans-serif`;
-                
-                ctx.shadowColor = "rgba(0,0,0,0.8)";
-                ctx.shadowBlur = 4;
-                ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
-                
-                ctx.fillStyle = color;
-                const textY = y1 > fontSize + 5 ? y1 - 8 : y1 + fontSize + 8;
-                ctx.fillText(`${name} ${confPercent}%`, x1, textY);
-                
-                // Reset shadow for next box
-                ctx.shadowColor = "transparent";
-                ctx.shadowBlur = 0;
-            });
-        }
-
-        function updateChestSummary(predictions) {
-            const resBox = document.getElementById('result-chest');
-            resBox.classList.remove('hidden');
-            
-            if (!predictions || predictions.length === 0) {
-                resBox.innerHTML = `
+        if (!predictions || predictions.length === 0) {
+          resBox.innerHTML = `
                     <div class="flex flex-col items-center justify-center text-center py-4 animate-fade-in">
                         <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-500 mb-3 shadow-sm border-4 border-green-50">
                             <i class="fa-solid fa-check text-3xl"></i>
                         </div>
                         <h3 class="text-xl font-bold text-green-600 mb-1">Normal</h3>
-                        <p class="text-gray-500 text-sm" data-i18n="chest_normal_sub">${i18n[currentLang].chest_normal_sub}</p>
+                        <p class="text-gray-500 text-sm">ไม่พบความผิดปกติที่ชัดเจน</p>
                     </div>
                 `;
-                return;
-            }
+          return;
+        }
 
-            const counts = {};
-            predictions.forEach(p => {
-                const name = p.name || p.class || "Unknown";
-                counts[name] = (counts[name] || 0) + 1;
-            });
+        const counts = {};
+        predictions.forEach((p) => {
+          const name = p.name || p.class || "Unknown";
+          counts[name] = (counts[name] || 0) + 1;
+        });
 
-            let html = `
+        let html = `
                 <div class="animate-fade-in text-left">
-                    <h4 class="font-bold text-cyan-700 dark:text-cyan-400 mb-3" data-i18n="chest_res_header">${i18n[currentLang].chest_res_header}</h4>
+                    <h4 class="font-bold mb-3" style="color:${themeColor}" data-i18n="${headerKey}">${i18n[currentLang][headerKey] || "ผลการวิเคราะห์"}</h4>
                     <div class="bg-gray-50 dark:bg-slate-900 rounded-xl p-3 mb-3 border border-gray-100 dark:border-slate-700 flex justify-between items-center">
                         <span class="font-semibold text-gray-700 dark:text-gray-300">Total Detections</span>
-                        <span class="bg-cyan-600 text-white px-3 py-1 rounded-full text-sm font-bold">${predictions.length}</span>
+                        <span class="text-white px-3 py-1 rounded-full text-sm font-bold" style="background:${themeColor}">${predictions.length}</span>
                     </div>
                     <div class="space-y-2">
             `;
 
-            for (const [className, count] of Object.entries(counts)) {
-                const color = getChestClassColor(className);
-                html += `
+        for (const [className, count] of Object.entries(counts)) {
+          const color = getDetectionColor(className);
+          html += `
                     <div class="flex items-center justify-between p-2 border border-gray-100 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800">
                         <div class="flex items-center gap-3">
                             <div class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${color};"></div>
@@ -699,90 +1120,341 @@
                         </span>
                     </div>
                 `;
-            }
-            html += `</div></div>`;
-            resBox.innerHTML = html;
         }
+        html += `</div></div>`;
+        resBox.innerHTML = html;
+      }
 
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const chatBox = document.getElementById('chat-box');
-            const typingIndicator = document.getElementById('typing-indicator');
-            
-            const message = input.value.trim();
-            if (!message) return;
+      // ===== Skin Cancer Upload & Analysis =====
+      function handleSkinUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        skinFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            skinImage = img;
+            const canvas = document.getElementById("canvas-xray");
+            const ctx = canvas.getContext("2d");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            canvas.classList.remove("hidden");
+            document.getElementById("status-xray").classList.add("hidden");
+            document.getElementById("controls-xray").classList.remove("hidden");
+            document.getElementById("result-xray").classList.add("hidden");
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
 
-            // Add user message to chat
-            const userMsgDiv = document.createElement('div');
-            userMsgDiv.className = 'flex justify-end mb-4 animate-fade-in';
-            userMsgDiv.innerHTML = `
+      async function runSkinAnalysis() {
+        if (!skinFile) return;
+        const btn = document.querySelector("#controls-xray button");
+        const resBox = document.getElementById("result-xray");
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
+        btn.disabled = true;
+
+        const canvas = document.getElementById("canvas-xray");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(skinImage, 0, 0);
+
+        const formData = new FormData();
+        formData.append("file", skinFile);
+        formData.append("conf", "0.25");
+        formData.append("iou", "0.7");
+        formData.append("imgsz", "640");
+
+        try {
+          const response = await fetch("/api/skinCancerPredict", {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) throw new Error("API Error");
+          const data = await response.json();
+          const predictions = parsePredictions(data);
+          drawDetectionBoxes("canvas-xray", predictions);
+          renderDetectionSummary(
+            "result-xray",
+            predictions,
+            "#1c5f58",
+            "res_header",
+          );
+        } catch (error) {
+          console.error(error);
+          resBox.classList.remove("hidden");
+          resBox.innerHTML = `<div class="text-center text-red-500 font-bold p-4">Error: ${error.message}</div>`;
+        } finally {
+          btn.innerHTML = i18n[currentLang].btn_analyze || "Analyze Now";
+          btn.disabled = false;
+        }
+      }
+
+      // ===== Blood Cell Upload & Analysis =====
+      function handleBloodUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        bloodFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            bloodImage = img;
+            const canvas = document.getElementById("canvas-blood");
+            const ctx = canvas.getContext("2d");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            canvas.classList.remove("hidden");
+            document.getElementById("status-blood").classList.add("hidden");
+            document
+              .getElementById("controls-blood")
+              .classList.remove("hidden");
+            document.getElementById("result-blood").classList.add("hidden");
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function runBloodAnalysis() {
+        if (!bloodFile) return;
+        const btn = document.querySelector("#controls-blood button");
+        const resBox = document.getElementById("result-blood");
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
+        btn.disabled = true;
+
+        const canvas = document.getElementById("canvas-blood");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bloodImage, 0, 0);
+
+        const formData = new FormData();
+        formData.append("file", bloodFile);
+        formData.append("conf", "0.25");
+        formData.append("iou", "0.7");
+        formData.append("imgsz", "640");
+
+        try {
+          const response = await fetch("/api/bloodCellPredict", {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) throw new Error("API Error");
+          const data = await response.json();
+          const predictions = parsePredictions(data);
+          drawDetectionBoxes("canvas-blood", predictions);
+          renderDetectionSummary(
+            "result-blood",
+            predictions,
+            "#287e75",
+            "res_blood_header",
+          );
+        } catch (error) {
+          console.error(error);
+          resBox.classList.remove("hidden");
+          resBox.innerHTML = `<div class="text-center text-red-500 font-bold p-4">Error: ${error.message}</div>`;
+        } finally {
+          btn.innerHTML = i18n[currentLang].btn_count || "Count Cells";
+          btn.disabled = false;
+        }
+      }
+
+      function toggleTheme() {
+        document.documentElement.classList.toggle("dark");
+        const isDark = document.documentElement.classList.contains("dark");
+        document.getElementById("theme-icon").innerHTML = isDark
+          ? '<i class="fa-solid fa-sun"></i>'
+          : '<i class="fa-solid fa-moon"></i>';
+        document.getElementById("canvas-container").style.background = isDark
+          ? "#020617"
+          : "linear-gradient(135deg, #f0f9f9 0%, #ffffff 100%)";
+      }
+
+      function openBooking() {
+        document.getElementById("booking-modal").classList.remove("hidden");
+        document
+          .getElementById("booking-form-content")
+          .classList.remove("hidden");
+        document
+          .getElementById("booking-success-content")
+          .classList.add("hidden");
+      }
+      function closeBooking() {
+        document.getElementById("booking-modal").classList.add("hidden");
+      }
+
+      function getChestClassColor(className) {
+        const name = className.toLowerCase();
+        if (name.includes("covid")) return "#ef4444";
+        if (name.includes("normal")) return "#10b981";
+        if (name.includes("opacity")) return "#f59e0b";
+        return "#06b6d4";
+      }
+
+      function handleChestUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        chestFile = file;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            chestImage = img;
+            const canvas = document.getElementById("canvas-chest");
+            const ctx = canvas.getContext("2d");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            canvas.classList.remove("hidden");
+
+            document.getElementById("status-chest").classList.add("hidden");
+            document
+              .getElementById("controls-chest")
+              .classList.remove("hidden");
+            document.getElementById("result-chest").classList.add("hidden");
+            document.querySelector("#controls-chest button").innerHTML =
+              i18n[currentLang].btn_analyze || "Analyze Now";
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function runChestAnalysis() {
+        if (!chestFile) return;
+        const btn = document.querySelector("#controls-chest button");
+        const resBox = document.getElementById("result-chest");
+
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i>`;
+        btn.disabled = true;
+
+        const canvas = document.getElementById("canvas-chest");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(chestImage, 0, 0);
+
+        const formData = new FormData();
+        formData.append("file", chestFile);
+        formData.append("conf", "0.25");
+        formData.append("iou", "0.7");
+        formData.append("imgsz", "640");
+
+        try {
+          const response = await fetch("/api/ultralyticsPredict", {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) throw new Error("API Error");
+          const data = await response.json();
+          const predictions = parsePredictions(data);
+          drawDetectionBoxes("canvas-chest", predictions);
+          renderDetectionSummary(
+            "result-chest",
+            predictions,
+            "#0891b2",
+            "chest_res_header",
+          );
+        } catch (error) {
+          console.error(error);
+          resBox.classList.remove("hidden");
+          resBox.innerHTML = `<div class="text-center text-red-500 font-bold p-4">Error connecting to analysis server.</div>`;
+        } finally {
+          btn.innerHTML = i18n[currentLang].btn_analyze || "Analyze Now";
+          btn.disabled = false;
+        }
+      }
+
+      // drawChestBoxes and updateChestSummary replaced by shared drawDetectionBoxes and renderDetectionSummary above
+
+      async function sendMessage() {
+        const input = document.getElementById("chat-input");
+        const chatBox = document.getElementById("chat-box");
+        const typingIndicator = document.getElementById("typing-indicator");
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Add user message to chat
+        const userMsgDiv = document.createElement("div");
+        userMsgDiv.className = "flex justify-end mb-4 animate-fade-in";
+        userMsgDiv.innerHTML = `
                 <div class="bg-primary text-white px-4 py-3 rounded-2xl max-w-xl rounded-br-none shadow-md">
                     <p class="text-sm">${message}</p>
                 </div>
             `;
-            chatBox.appendChild(userMsgDiv);
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.appendChild(userMsgDiv);
+        input.value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Show typing indicator
-            typingIndicator.classList.remove('hidden');
+        // Show typing indicator
+        typingIndicator.classList.remove("hidden");
 
-            try {
-                // Send message to Gemini via serverless function
-                const response = await fetch('/api/geminiChat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        apiKey: apiKey
-                    })
-                });
+        try {
+          // Send message to Gemini via serverless function
+          const response = await fetch("/api/geminiChat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: message,
+            }),
+          });
 
-                if (!response.ok) throw new Error('API Error');
-                const data = await response.json();
-                
-                // Add AI response to chat
-                const aiMsgDiv = document.createElement('div');
-                aiMsgDiv.className = 'flex justify-start mb-4 animate-fade-in';
-                const responseText = data.response || 'Unable to generate response';
-                aiMsgDiv.innerHTML = `
+          if (!response.ok) throw new Error("API Error");
+          const data = await response.json();
+
+          // Add AI response to chat
+          const aiMsgDiv = document.createElement("div");
+          aiMsgDiv.className = "flex justify-start mb-4 animate-fade-in";
+          const responseText = data.response || "Unable to generate response";
+          aiMsgDiv.innerHTML = `
                     <div class="bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white px-4 py-3 rounded-2xl max-w-xl rounded-bl-none shadow-md">
                         <p class="text-sm">${responseText}</p>
                     </div>
                 `;
-                chatBox.appendChild(aiMsgDiv);
-
-            } catch (error) {
-                console.error('Chat error:', error);
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'flex justify-start mb-4 animate-fade-in';
-                errorDiv.innerHTML = `
+          chatBox.appendChild(aiMsgDiv);
+        } catch (error) {
+          console.error("Chat error:", error);
+          const errorDiv = document.createElement("div");
+          errorDiv.className = "flex justify-start mb-4 animate-fade-in";
+          errorDiv.innerHTML = `
                     <div class="bg-red-100 text-red-700 px-4 py-3 rounded-2xl max-w-xl rounded-bl-none shadow-md">
                         <p class="text-sm">Error: Unable to get response. Please check API key.</p>
                     </div>
                 `;
-                chatBox.appendChild(errorDiv);
-            } finally {
-                typingIndicator.classList.add('hidden');
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
+          chatBox.appendChild(errorDiv);
+        } finally {
+          typingIndicator.classList.add("hidden");
+          chatBox.scrollTop = chatBox.scrollHeight;
         }
+      }
 
-        window.onload = () => { 
-            init3D(); 
-            updateUI();
-            // Setup chat input Enter key
-            const chatInput = document.getElementById('chat-input');
-            if (chatInput) {
-                chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                });
+      window.onload = () => {
+        init3D();
+        updateUI();
+        // Setup chat input Enter key
+        const chatInput = document.getElementById("chat-input");
+        if (chatInput) {
+          chatInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
             }
-        };
-        window.onresize = () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); };
+          });
+        }
+      };
+      window.onresize = () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      };
     </script>
-</body>
+  </body>
 </html>

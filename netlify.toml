@@ -1,0 +1,18 @@
+# Root config — ชี้ base directory ไปยัง subfolder
+# Netlify จะอ่านไฟล์ทุกอย่างจาก Skin cancer AI.project/ เป็น root
+
+[build]
+  base = "Skin cancer AI.project"
+  publish = "."
+  functions = "netlify/functions"
+
+# Custom Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+
+# ตั้งค่า Functions
+[functions]
+  node_bundler = "esbuild"
