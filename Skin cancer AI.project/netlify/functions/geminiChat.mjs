@@ -2,7 +2,7 @@
 // รองรับทั้ง text-only chat และ vision (ส่งรูปวิเคราะห์)
 // API key ฝังฝั่ง server เพื่อความปลอดภัย
 
-const GEMINI_API_KEY = "AIzaSyDkgkVeDQRNK633f6gA87Vohj3koJp5Zno";
+const GEMINI_API_KEY = "AIzaSyDno0MelTGQEI_nn3FhoG6adHMJsKBm7Pw";
 const MODELS = ["gemini-2.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-pro"];
 
 const SYSTEM_INSTRUCTION = "คุณเป็นผู้ช่วย AI ด้านการแพทย์ชื่อ MediAI ตอบคำถามเกี่ยวกับสุขภาพและการแพทย์อย่างเป็นมิตร ให้ข้อมูลที่ถูกต้องและเข้าใจง่าย พร้อมแนะนำให้ปรึกษาแพทย์เมื่อจำเป็น ตอบเป็นภาษาไทยเป็นหลัก ยกเว้นผู้ถามใช้ภาษาอังกฤษ";
