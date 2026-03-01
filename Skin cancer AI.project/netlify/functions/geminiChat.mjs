@@ -3,7 +3,7 @@
 // API key ฝังฝั่ง server เพื่อความปลอดภัย
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-const GEMINI_API_KEY = "AIzaSyAU8CDdWfMRQydtjr-3cigU-dcl_3OK7xk";
+const GEMINI_API_KEY = "AIzaSyDkgkVeDQRNK633f6gA87Vohj3koJp5Zno";
 
 export const config = {
     path: "/api/geminiChat",
