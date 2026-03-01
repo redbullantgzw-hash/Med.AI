@@ -1,0 +1,27 @@
+# Netlify Configuration
+
+[build]
+  command = "echo 'Building...'"
+  functions = "netlify/functions"
+  publish = "."
+
+# API routing configuration
+[[redirects]]
+  from = "/api/ultralyticsPredict"
+  to = "/.netlify/functions/ultralyticsPredict"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/geminiChat"
+  to = "/.netlify/functions/geminiChat"
+  status = 200
+  force = true
+
+# CORS headers for API responses
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
